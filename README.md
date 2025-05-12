@@ -28,6 +28,9 @@ Scheduler
 
 php artisan schedule:run
 
+file upload 
+
+php artisan storage:link
 
 ================================================================================
 Chatbord Run Command
@@ -53,3 +56,7 @@ php artisan queue:work
 Backend scheduler run
 
 php artisan schedule:run
+
+file upload 
+
+php artisan storage:link
