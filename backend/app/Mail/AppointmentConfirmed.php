@@ -12,7 +12,7 @@ class AppointmentConfirmed extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    protected $appointment;
+    // protected $appointment;
 
     public function __construct(Appointment $appointment)
     {
