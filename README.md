@@ -1,8 +1,12 @@
-Chatbord Run Command 
+# 🚀 Project Commands
+
+## 🐍 Python Backend (FastAPI)
+
+```bash
 
 python -m venv venv
 
-venv\Scripts\activate
+venv\Scripts\activate        # On Windows
 
 pip install uvicorn
 
@@ -14,10 +18,12 @@ pip install fastapi uvicorn google-generativeai
 
 uvicorn main:app --reload --host 0.0.0.0 --port 8001
 
-Backend Queues run 
+🧵 Laravel Backend
+
+Queue Worker
 
 php artisan queue:work
 
-Backend scheduler  run
+Scheduler
 
 php artisan schedule:run
