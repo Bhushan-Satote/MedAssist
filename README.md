@@ -14,3 +14,10 @@ pip install fastapi uvicorn google-generativeai
 
 uvicorn main:app --reload --host 0.0.0.0 --port 8001
 
+Backend Queues run 
+
+php artisan queue:work
+
+Backend scheduler  run
+
+php artisan schedule:run
