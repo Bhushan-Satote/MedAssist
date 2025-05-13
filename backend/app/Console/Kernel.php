@@ -8,44 +8,60 @@ use App\Models\Appointment;
 use App\Notifications\AppointmentReminder;
 use Illuminate\Support\Facades\Notification;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class Kernel extends ConsoleKernel
 {
     protected function schedule(Schedule $schedule)
     {
         $schedule->call(function () {
-            // Get current time
-            $now = Carbon::now();
+            try {
+                $now = Carbon::now();
+                Log::info('Scheduler running', ['time' => $now->toDateTimeString()]);
+                $reminderWindows = [
+                    '12' => $now->copy()->addHours(12),
+                    '3' => $now->copy()->addHours(3),
+                ];
 
-            // Define reminder windows (12h and 3h)
-            $reminderWindows = [
-                '12' => $now->copy()->addHours(12), // 12 hours from now
-                '3' => $now->copy()->addHours(3),   // 3 hours from now
-            ];
+                foreach ($reminderWindows as $hoursBefore => $targetTime) {
+                    $appointments = Appointment::where('request_status', 'accepted')
+                        ->where('appointment_status', 'scheduled')
+                        ->whereRaw("STR_TO_DATE(CONCAT(appointment_date, ' ', start_time), '%Y-%m-%d %H:%i:%s') BETWEEN ? AND ?", [
+                            $targetTime->copy()->subMinutes(5),
+                            $targetTime->copy()->addMinutes(5),
+                        ])
+                        ->whereDoesntHave('reminders', function ($query) use ($hoursBefore) {
+                            $query->where('hours_before', $hoursBefore);
+                        })
+                        ->with(['patient', 'doctor'])
+                        ->get();
 
-            foreach ($reminderWindows as $hoursBefore => $targetTime) {
-                // Find appointments within a 10-minute window of the target time
-                $appointments = Appointment::where('request_status', 'accepted')
-                    ->where('appointment_status', 'scheduled')
-                    ->whereRaw("STR_TO_DATE(CONCAT(appointment_date, ' ', start_time), '%Y-%m-%d %H:%i') BETWEEN ? AND ?", [
-                        $targetTime->copy()->subMinutes(5),
-                        $targetTime->copy()->addMinutes(5),
-                    ])
-                    ->with(['patient', 'doctor'])
-                    ->get();
+                    Log::info('Appointments found for ' . $hoursBefore . '-hour reminder', [
+                        'target_time' => $targetTime->toDateTimeString(),
+                        'appointments' => $appointments->toArray(),
+                    ]);
 
-                foreach ($appointments as $appointment) {
-                    // Send reminder notification
-                    Notification::send($appointment->patient, new AppointmentReminder($appointment, $hoursBefore));
+                    foreach ($appointments as $appointment) {
+                        Log::info('Sending ' . $hoursBefore . '-hour reminder', ['appointment_id' => $appointment->id]);
+                        Notification::send($appointment->patient, new AppointmentReminder($appointment, $hoursBefore));
+                        \DB::table('appointment_reminders')->insert([
+                            'appointment_id' => $appointment->id,
+                            'hours_before' => $hoursBefore,
+                            'sent_at' => $now,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ]);
+                    }
                 }
+            } catch (\Exception $e) {
+                Log::error('Scheduler failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             }
-        })->everyTenMinutes(); // Run every 10 minutes to catch appointments in the window
+        })->everyMinute(); // Temporary for testing
     }
 
     protected function commands()
     {
         $this->load(__DIR__.'/Commands');
-
         require base_path('routes/console.php');
     }
 }

@@ -27,30 +27,28 @@ class AppointmentReminder extends Notification implements ShouldQueue
     }
 
     public function toMail($notifiable)
-    {
-        $appointmentTime = \Carbon\Carbon::parse($this->appointment->appointment_date . ' ' . $this->appointment->start_time);
-        
-        return (new MailMessage)
-            ->subject('Appointment Reminder: ' . $this->hoursBefore . ' Hours to Go')
-            ->greeting('Hello ' . $this->appointment->patient->first_name . ',')
-            ->line('This is a reminder for your upcoming appointment.')
-            ->line('Doctor: ' . $this->appointment->doctor->first_name . ' ' . $this->appointment->doctor->last_name)
-            ->line('Date: ' . $this->appointment->appointment_date->format('Y-m-d'))
-            ->line('Time: ' . $this->appointment->start_time . ' - ' . $this->appointment->end_time)
-            ->line('Notes: ' . ($this->appointment->notes ?? 'None'))
-            ->action('View Appointment', url('/dashboard/appointments'))
-            ->line('Please arrive on time. Thank you for using MedAssist!');
-    }
+{
+    return (new MailMessage)
+        ->subject('Appointment Reminder: ' . $this->hoursBefore . ' Hours to Go')
+        ->greeting('Hello ' . $this->appointment->patient->patient->first_name . ',')
+        ->line('This is a reminder for your upcoming appointment.')
+        ->line('Doctor: ' . $this->appointment->doctor->doctor->first_name . ' ' . $this->appointment->doctor->doctor->last_name)
+        ->line('Date: ' . $this->appointment->appointment_date->format('Y-m-d'))
+        ->line('Time: ' . $this->appointment->start_time . ' - ' . $this->appointment->end_time)
+        ->line('Notes: ' . ($this->appointment->notes ?? 'None'))
+        ->action('View Appointment', url('/dashboard/appointments'))
+        ->line('Please arrive on time. Thank you for using MedAssist!');
+}
 
-    public function toArray($notifiable)
-    {
-        return [
-            'appointment_id' => $this->appointment->id,
-            'doctor_name' => $this->appointment->doctor->first_name . ' ' . $this->appointment->doctor->last_name,
-            'date' => $this->appointment->appointment_date->format('Y-m-d'),
-            'start_time' => $this->appointment->start_time,
-            'end_time' => $this->appointment->end_time,
-            'hours_before' => $this->hoursBefore,
-        ];
-    }
+public function toArray($notifiable)
+{
+    return [
+        'appointment_id' => $this->appointment->id,
+        'doctor_name' => $this->appointment->doctor->doctor->first_name . ' ' . $this->appointment->doctor->doctor->last_name,
+        'date' => $this->appointment->appointment_date->format('Y-m-d'),
+        'start_time' => $this->appointment->start_time,
+        'end_time' => $this->appointment->end_time,
+        'hours_before' => $this->hoursBefore,
+    ];
+}
 }

@@ -89,6 +89,7 @@ Route::prefix('appointments')->group(function () {
     Route::get('/{id}', [AppointmentController::class, 'show'])->middleware('role:patient,doctor,admin');
     Route::get('/requests', [AppointmentController::class, 'getRequests'])->middleware('role:doctor');
     Route::put('/respond/{id}', [AppointmentController::class, 'respond'])->middleware('role:doctor');
+    Route::get('/{id}/reminders', [AppointmentController::class, 'getReminders'])->middleware('role:patient,doctor');
 });
 
     // Admin routes

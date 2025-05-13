@@ -40,4 +40,8 @@ class Appointment extends Model
     {
         return $this->belongsTo(Availability::class);
     }
+    public function reminders()
+{
+    return $this->hasMany(AppointmentReminder::class);
+}
 }
