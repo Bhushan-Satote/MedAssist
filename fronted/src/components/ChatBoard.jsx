@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaRobot } from 'react-icons/fa';
+import { FaRobot, FaTimes } from 'react-icons/fa';
 
 const ChatBoard = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -78,8 +78,14 @@ const ChatBoard = () => {
       {/* Chat Modal */}
       {isOpen && (
         <div className="fixed bottom-20 right-4 w-96 bg-white rounded-lg shadow-xl border border-gray-200">
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-gray-200 flex justify-between items-center">
             <h3 className="text-lg font-semibold text-gray-800">Ayurvedic Health Assistant</h3>
+            <button 
+              onClick={() => setIsOpen(false)}
+              className="text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <FaTimes size={20} />
+            </button>
           </div>
           
           <div className="h-96 overflow-y-auto p-4 bg-gray-50 space-y-4">
