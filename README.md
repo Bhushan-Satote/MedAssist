@@ -1,5 +1,26 @@
 # 🚀 Project Commands
 
+## 📦 Frontend (React)
+
+```bash
+
+npm install
+
+npm run dev
+
+
+## 📦 Backend (Laravel)
+
+```bash
+
+composer install
+
+php artisan migrate
+
+php artisan serve
+
+
+
 ## 🐍 Python Backend (FastAPI)
 
 ```bash
