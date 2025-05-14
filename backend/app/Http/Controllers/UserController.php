@@ -240,36 +240,44 @@ class UserController extends Controller
     // }
 
     public function login(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-        'role' => 'required|in:doctor,patient,admin'
-    ]);
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+            'role' => 'required|in:doctor,patient,admin'
+        ]);
 
-    if (!Auth::attempt($request->only('email', 'password'))) {
-        return response()->json(['status' => 'error', 'message' => 'Invalid credentials'], 401);
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid credentials'], 401);
+        }
+
+        $user = Auth::user();
+
+        // Check if the user role matches
+        if ($user->role !== $request->role) {
+            return response()->json(['status' => 'error', 'message' => 'Role mismatch'], 403);
+        }
+
+        // Check email verification for doctors and patients
+        if (in_array($user->role, ['doctor', 'patient']) && !$user->hasVerifiedEmail()) {
+            Auth::logout(); // Log out the user to prevent session persistence
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Please verify your email before logging in.'
+            ], 403);
+        }
+
+        // Create token
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'token' => $token,
+                'user' => $user,
+            ]
+        ]);
     }
-
-    $user = Auth::user();
-
-    // Check if the user role matches
-    if ($user->role !== $request->role) {
-        return response()->json(['status' => 'error', 'message' => 'Role mismatch'], 403);
-    }
-
-    // Create token
-    $token = $user->createToken('auth_token')->plainTextToken;
-
-    return response()->json([
-        'status' => 'success',
-        'data' => [
-            'token' => $token,
-            'user' => $user,  // ✅ Make sure $user is passed like this
-        ]
-    ]);
-}
-
 
 
     public function logout(Request $request)

@@ -9,36 +9,22 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\AppointmentController;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use App\Http\Controllers\EmailVerificationController;
 
 // Public routes
 Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'login']);
 
 // Email verification routes
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill();
-    return response()->json(['message' => 'Email verified successfully']);
-})->middleware(['auth:sanctum', 'signed'])->name('verification.verify');
+Route::prefix('email')->group(function () {
+    Route::get('/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
 
-Route::post('/email/verification-notification', function (Request $request) {
-    $request->user()->sendEmailVerificationNotification();
-    return response()->json(['message' => 'Verification link sent']);
-})->middleware(['auth:sanctum', 'throttle:6,1'])->name('verification.send');
-
-Route::post('/email/resend', function (Request $request) {
-    $user = \App\Models\User::where('email', $request->email)->first();
-
-    if (!$user) {
-        return response()->json(['message' => 'User not found'], 404);
-    }
-
-    if ($user->hasVerifiedEmail()) {
-        return response()->json(['message' => 'Email already verified.'], 400);
-    }
-
-    $user->sendEmailVerificationNotification();
-
-    return response()->json(['message' => 'Verification email resent.']);
+    Route::post('/verification-notification', [EmailVerificationController::class, 'resend'])
+        ->middleware(['auth:sanctum', 'throttle:6,1'])
+        ->name('verification.send');
 });
 
 // Password reset routes
