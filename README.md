@@ -2,7 +2,7 @@
 ```markdown:d:\final\MedAssist\README.md
 # MedAssist 🏥
 
-A comprehensive medical assistance platform built with React, Laravel, and FastAPI.
+A comprehensive HealthCare assistance platform built with React, Laravel, and FastAPI.
 
 ## 🚀 Getting Started
 
