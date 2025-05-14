@@ -10,7 +10,7 @@ A comprehensive HealthCare assistance platform built with React, Laravel, and Fa
 - Node.js and npm
 - PHP and Composer
 - Python 3.8+
-- MySQL/PostgreSQL
+- MySQL
 
 ## 🛠️ Installation & Setup
 
