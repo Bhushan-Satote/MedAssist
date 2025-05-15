@@ -13,7 +13,7 @@ class SendAppointmentReminders extends Command
     {
         $tomorrow = Carbon::tomorrow()->toDateString();
         $appointments = Appointment::with(['patient'])
-            ->where('appointment_date', $tomorrow)
+            // ->where('appointment_date', $tomorrow)
             ->where('appointment_status', 'scheduled')
             ->get();
 
