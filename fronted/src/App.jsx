@@ -19,6 +19,8 @@ import AboutUs from './components/AboutUs';
 import ManageAvailability from './components/Doctors/Availability/ManageAvailability';
 import ContactUs from './components/ContactUs';
 import ChatBoard from './components/ChatBoard';
+import BookAppointment from './components/Patients/Appointments/BookAppointments';
+import ShowAvailableDoctor from './components/Patients/AvailableDoctor/ShowAvailableDoctor';
 
 
 function App() {
@@ -44,11 +46,14 @@ function App() {
         <Route path="/forgot-password" element={<ForgetPassword />} />
         <Route path="/doctor/availability" element={<ManageAvailability />} />
         <Route path="/contact" element={<ContactUs />} />
+        <Route path="/patient/appointments" element={<BookAppointment />} />
+        <Route path="/patient/showavailabledoctor" element={<ShowAvailableDoctor />} />
       </Routes>
       <ChatBoard />
     </Router>
     </>
+
   )
 }
 
-export default App
+export default App;
