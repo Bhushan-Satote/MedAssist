@@ -1,60 +1,154 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import PatientSidebar from '../Dashbord/PatientSidebar';
 
 const BookAppointment = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const selectedDoctor = location.state?.selectedDoctor;
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [doctors, setDoctors] = useState([]);
-  
+  const [availableSlots, setAvailableSlots] = useState([]);
+
+  // Initialize formData with the correct date format
   const [formData, setFormData] = useState({
-    doctor_id: '', // Changed from doctorId to match backend
-    appointment_date: '', // Changed from appointmentDate to match backend
-    start_time: '', // Changed from appointmentTime to match backend
-    end_time: '', // Added to match backend
-    notes: '', // Kept as is
+    doctor_id: selectedDoctor?.user_id || '',
+    appointment_date: selectedDoctor?.availabilities?.[0]?.date || '',
+    start_time: '',
+    end_time: '',
+    notes: '',
   });
 
-  // Fetch available doctors using the correct API endpoint
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
         const token = localStorage.getItem('auth_token');
-        const today = new Date().toISOString().split('T')[0];
-        const response = await axios.get(`http://127.0.0.1:8000/api/doctors/available/${today}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
+        if (!token) {
+          setError('Please log in to book an appointment');
+          navigate('/login');
+          return;
+        }
+
+        if (selectedDoctor && selectedDoctor.availabilities) {
+          const availableDate = selectedDoctor.availabilities[0]?.date;
+          
+          const slots = selectedDoctor.availabilities
+            .filter(slot => !slot.is_booked)
+            .map(slot => ({
+              start_time: slot.start_time,
+              end_time: slot.end_time,
+              doctor_name: `Dr. ${selectedDoctor.first_name} ${selectedDoctor.last_name} - ${selectedDoctor.specialization || 'General'}`,
+              doctor_id: selectedDoctor.user_id,
+              date: slot.date
+            }));
+          
+          setAvailableSlots(slots);
+          
+          if (slots.length > 0) {
+            setFormData(prev => ({
+              ...prev,
+              doctor_id: selectedDoctor.user_id,
+              appointment_date: slots[0].date,
+              start_time: slots[0].start_time,
+              end_time: slots[0].end_time,
+            }));
           }
+          return;
+        }
+
+        // Fallback to fetching all available doctors if no specific doctor is selected
+        const date = formData.appointment_date;
+        const response = await axios.get(`http://127.0.0.1:8000/api/doctors/available/${date}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
         });
+
+        console.log('API Response:', JSON.stringify(response.data, null, 2));
 
         if (response.data.status === 'success') {
           setDoctors(response.data.data);
+          const slots = response.data.data
+            .filter(doctor => doctor.availabilities && Array.isArray(doctor.availabilities) && doctor.availabilities.length > 0)
+            .flatMap(doctor =>
+              doctor.availabilities
+                .filter(slot => !slot.is_booked) // Only unbooked slots
+                .map(slot => ({
+                  start_time: slot.start_time,
+                  end_time: slot.end_time,
+                  doctor_name: `Dr. ${doctor.first_name} ${doctor.last_name} - ${doctor.specialization || 'General'}`,
+                  doctor_id: doctor.user_id,
+                }))
+            );
+          setAvailableSlots(slots);
+          console.log('Available Slots:', slots);
+
+          if (selectedDoctor && slots.length > 0) {
+            const doctorSlot = slots.find(slot => slot.doctor_id === selectedDoctor.user_id);
+            if (doctorSlot) {
+              setFormData(prev => ({
+                ...prev,
+                doctor_id: doctorSlot.doctor_id,
+                appointment_date: date,
+                start_time: doctorSlot.start_time,
+                end_time: doctorSlot.end_time,
+              }));
+              console.log('Set formData for selected doctor:', doctorSlot);
+            } else {
+              console.log('No slot found for selected doctor:', selectedDoctor);
+            }
+          }
+        } else {
+          setError('No available doctors found for the selected date');
+          console.log('API Success but no data:', response.data);
         }
       } catch (err) {
-        setError('Failed to fetch doctors');
-        console.error(err);
+        const errorMessage = err.response?.data?.message || 'Failed to fetch doctors';
+        setError(errorMessage);
+        console.error('Fetch Doctors Error:', err.response?.data || err);
       }
     };
 
     fetchDoctors();
-  }, []);
+  }, [selectedDoctor, navigate]);
+
+  const formatTimeString = (timeStr) => {
+    if (!timeStr) return '';
+    const [hours, minutes] = timeStr.split(':').map(num => parseInt(num, 10));
+    const date = new Date();
+    date.setHours(hours);
+    date.setMinutes(minutes);
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-      // Automatically set end_time 1 hour after start_time when start_time changes
-      ...(name === 'start_time' && {
-        end_time: new Date(new Date(`2000-01-01T${value}`).getTime() + 60 * 60 * 1000)
-          .toTimeString()
-          .slice(0, 5)
-      })
-    }));
+
+    if (name === 'start_time') {
+      const selectedSlot = availableSlots.find(slot => slot.start_time === value);
+      if (selectedSlot) {
+        setFormData(prev => ({
+          ...prev,
+          start_time: value,
+          end_time: selectedSlot.end_time,
+          doctor_id: selectedSlot.doctor_id,
+        }));
+        console.log('Selected slot:', selectedSlot);
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -66,12 +160,15 @@ const BookAppointment = () => {
       const token = localStorage.getItem('auth_token');
       const response = await axios.post(
         'http://127.0.0.1:8000/api/appointments/book',
-        formData,
+        {
+          ...formData,
+          appointment_time: `${formData.appointment_date} ${formData.start_time}`,
+        },
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          }
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
         }
       );
 
@@ -80,6 +177,7 @@ const BookAppointment = () => {
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to book appointment');
+      console.error('Book Appointment Error:', err.response?.data || err);
     } finally {
       setLoading(false);
     }
@@ -94,124 +192,100 @@ const BookAppointment = () => {
       <PatientSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
       <div className={`flex-1 ${isSidebarOpen ? 'ml-64' : 'ml-20'} transition-all duration-300`}>
-        {/* Header Section */}
         <header className="bg-white shadow-sm">
           <div className="flex items-center justify-between px-6 py-4">
-            <h1 className="text-2xl font-semibold text-gray-800">Book an Appointment</h1>
+            <h1 className="text-2xl font-semibold text-gray-800">Book Appointments</h1>
           </div>
         </header>
 
-        {/* Main Content */}
-        <div className="p-8">
-          <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
+        <div className="p-6">
+          <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm p-6">
             {error && (
-              <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
+              <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 text-red-700">
                 {error}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Doctor Selection */}
-              <div>
+
+                {selectedDoctor && (
+                  <div className="mb-8 p-4 bg-blue-50 rounded-lg">
+                    <h2 className="text-xl font-semibold text-gray-800 mb-4">Selected Doctor</h2>
+                    <p className="font-medium text-gray-900">
+                      Dr. {selectedDoctor.first_name} {selectedDoctor.last_name} - {selectedDoctor.specialization || 'General'}
+                    </p>
+                  </div>
+                )}
+
+                 {/* Date Selection */}
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Doctor
+                  Appointment Date
+                </label>
+                <input
+                  type="text"
+                  name="appointment_date"
+                  value={formData.appointment_date ? formData.appointment_date.split('T')[0] : ''}
+                  readOnly
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                  required
+                />
+              </div>
+
+              {/* Time Slot Selection */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Available Time Slots
                 </label>
                 <select
-                  name="doctor_id"
-                  value={formData.doctor_id}
+                  name="start_time"
+                  value={formData.start_time}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 >
-                  <option value="">Choose a doctor</option>
-                  {doctors.map(doctor => (
-                    <option key={doctor.id} value={doctor.id}>
-                      Dr. {doctor.first_name} {doctor.last_name} - {doctor.specialization}
+                  <option value="">Select a time slot</option>
+                  {availableSlots.map((slot, index) => (
+                    <option key={index} value={slot.start_time}>
+                      {formatTimeString(slot.start_time)} - {formatTimeString(slot.end_time)} ({slot.doctor_name})
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Date Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Appointment Date
-                </label>
-                <input
-                  type="date"
-                  name="appointment_date"
-                  value={formData.appointment_date}
-                  onChange={handleChange}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Additional Notes
+                  </label>
+                  <textarea
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleChange}
+                    rows="3"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Any additional information"
+                  ></textarea>
+                </div>
 
-              {/* Start Time Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Start Time
-                </label>
-                <input
-                  type="time"
-                  name="start_time"
-                  value={formData.start_time}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              {/* End Time Selection (Read-only, automatically set) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  End Time (1 hour duration)
-                </label>
-                <input
-                  type="time"
-                  name="end_time"
-                  value={formData.end_time}
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
-                  required
-                />
-              </div>
-
-              {/* Notes */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Additional Notes
-                </label>
-                <textarea
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Any additional information"
-                ></textarea>
-              </div>
-
-              {/* Submit Button */}
-              <div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`w-full py-3 px-4 text-white rounded-md ${
-                    loading
-                      ? 'bg-blue-400 cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700'
-                  } transition-colors duration-200`}
-                >
-                  {loading ? 'Booking...' : 'Book Appointment'}
-                </button>
-              </div>
-            </form>
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    disabled={loading || !formData.doctor_id || !formData.appointment_date || !formData.start_time}
+                    className={`w-full py-3 px-4 text-white rounded-md font-medium ${
+                      loading || !formData.doctor_id || !formData.appointment_date || !formData.start_time
+                        ? 'bg-blue-400 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700'
+                    } transition-colors duration-200`}
+                  >
+                    {loading ? 'Booking...' : 'Book Appointment'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    
   );
 };
 

@@ -147,52 +147,65 @@ const ShowAvailableDoctor = () => {
   );
 };
 
-const DoctorCard = ({ doctor, navigate }) => (
-  <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-300">
-    <div className="p-4">
-      <div className="relative mb-3">
-        <div className="w-20 h-20 mx-auto rounded-full overflow-hidden border-4 border-gray-50">
-          <img
-            src={doctor.profile_photo 
-              ? `http://127.0.0.1:8000/storage/${doctor.profile_photo}`
-              : "https://via.placeholder.com/80"}
-            alt={`Dr. ${doctor.first_name}`}
-            className="w-full h-full object-cover"
-          />
+const DoctorCard = ({ doctor, navigate }) => {
+  const [imageError, setImageError] = useState(false);
+
+  // Get the correct date based on selected day
+  const getAppointmentDate = () => {
+    if (doctor.availabilities && doctor.availabilities.length > 0) {
+      return doctor.availabilities[0].date;
+    }
+    return new Date().toISOString().split('T')[0];
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-300">
+      <div className="p-4">
+        <div className="relative mb-3">
+          <div className="w-20 h-20 mx-auto rounded-full overflow-hidden border-4 border-gray-50">
+            <img
+              src={!imageError && doctor.profile_photo 
+                ? `http://127.0.0.1:8000/storage/${doctor.profile_photo}`
+                : "https://via.placeholder.com/80"}
+              alt={`Dr. ${doctor.first_name}`}
+              className="w-full h-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          </div>
+          <div className="absolute top-0 right-1/3 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
         </div>
-        <div className="absolute top-0 right-1/3 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-      </div>
 
-      <div className="text-center mb-3">
-        <h3 className="text-lg font-semibold text-gray-800">
-          Dr. {doctor.first_name} {doctor.last_name}
-        </h3>
-        <p className="text-sm text-red-600 font-medium">{doctor.specialization}</p>
-        <p className="text-sm text-gray-600 mt-1">Experience: {doctor.experience} years</p>
-        <p className="text-sm text-gray-600">Fee: ₹{doctor.consultation_fees}</p>
-      </div>
+        <div className="text-center mb-3">
+          <h3 className="text-lg font-semibold text-gray-800">
+            Dr. {doctor.first_name} {doctor.last_name}
+          </h3>
+          <p className="text-sm text-red-600 font-medium">{doctor.specialization || 'General'}</p>
+          <p className="text-sm text-gray-600 mt-1">Experience: {doctor.experience || 'N/A'} years</p>
+          <p className="text-sm text-gray-600">Fee: ₹{doctor.consultation_fees || 'N/A'}</p>
+        </div>
 
-      <div className="space-y-2">
-        {/* <button 
-          className="w-full py-1.5 px-3 text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-          Chat Now
-        </button> */}
-        <button 
-          onClick={() => navigate('/patient/appointments')}
-          className="w-full py-1.5 px-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          Book Appointment
-        </button>
+        <div className="space-y-2">
+          <button 
+            onClick={() => navigate('/patient/appointments', { 
+              state: { 
+                selectedDoctor: {
+                  ...doctor,
+                  availabilities: doctor.availabilities,
+                  appointmentDate: getAppointmentDate()
+                }
+              } 
+            })}
+            className="w-full py-1.5 px-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Book Appointment 
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default ShowAvailableDoctor;
