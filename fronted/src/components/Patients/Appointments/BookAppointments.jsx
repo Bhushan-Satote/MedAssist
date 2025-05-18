@@ -12,14 +12,17 @@ const BookAppointment = () => {
   const [error, setError] = useState(null);
   const [doctors, setDoctors] = useState([]);
   const [availableSlots, setAvailableSlots] = useState([]);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   // Initialize formData with the correct date format
+  // Update the initial formData state to include availability_id
   const [formData, setFormData] = useState({
     doctor_id: selectedDoctor?.user_id || '',
     appointment_date: selectedDoctor?.availabilities?.[0]?.date || '',
     start_time: '',
     end_time: '',
     notes: '',
+    availability_id: '' // Add this field
   });
 
   useEffect(() => {
@@ -42,7 +45,8 @@ const BookAppointment = () => {
               end_time: slot.end_time,
               doctor_name: `Dr. ${selectedDoctor.first_name} ${selectedDoctor.last_name} - ${selectedDoctor.specialization || 'General'}`,
               doctor_id: selectedDoctor.user_id,
-              date: slot.date
+              date: slot.date,
+              id: slot.id // Add availability_id here
             }));
           
           setAvailableSlots(slots);
@@ -54,6 +58,7 @@ const BookAppointment = () => {
               appointment_date: slots[0].date,
               start_time: slots[0].start_time,
               end_time: slots[0].end_time,
+              availability_id: slots[0].id // Set initial availability_id
             }));
           }
           return;
@@ -140,6 +145,7 @@ const BookAppointment = () => {
           start_time: value,
           end_time: selectedSlot.end_time,
           doctor_id: selectedSlot.doctor_id,
+          availability_id: selectedSlot.id
         }));
         console.log('Selected slot:', selectedSlot);
       }
@@ -151,6 +157,19 @@ const BookAppointment = () => {
     }
   };
 
+  // Update the slots mapping to include the availability_id
+  const slots = selectedDoctor.availabilities
+    .filter(slot => !slot.is_booked)
+    .map(slot => ({
+      start_time: slot.start_time,
+      end_time: slot.end_time,
+      doctor_name: `Dr. ${selectedDoctor.first_name} ${selectedDoctor.last_name} - ${selectedDoctor.specialization || 'General'}`,
+      doctor_id: selectedDoctor.user_id,
+      date: slot.date,
+      id: slot.id // Add this line to include the availability ID
+    }));
+
+  // Update the handleSubmit function to include availability_id
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -158,25 +177,49 @@ const BookAppointment = () => {
 
     try {
       const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setError('Please log in to book an appointment');
+        navigate('/login');
+        return;
+      }
+
       const response = await axios.post(
         'http://127.0.0.1:8000/api/appointments/book',
         {
-          ...formData,
-          appointment_time: `${formData.appointment_date} ${formData.start_time}`,
+          doctor_id: formData.doctor_id,
+          appointment_date: formData.appointment_date,
+          start_time: formData.start_time,
+          end_time: formData.end_time,
+          notes: formData.notes,
+          availability_id: formData.availability_id
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
           },
         }
       );
 
       if (response.data.status === 'success') {
-        navigate('/patient/appointments');
+        setShowSuccessPopup(true);
+        setTimeout(() => {
+          setShowSuccessPopup(false);
+          navigate('/patient/dashboard');
+        }, 2000);
+      } else {
+        setError(response.data.message || 'Failed to book appointment');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to book appointment');
+      if (err.response?.status === 422) {
+        setError('Please ensure all required fields are filled correctly.');
+      } else if (err.response?.status === 403) {
+        setError('You are not authorized to book appointments. Please ensure you are logged in as a patient.');
+        navigate('/login');
+      } else {
+        setError(err.response?.data?.message || 'Failed to book appointment');
+      }
       console.error('Book Appointment Error:', err.response?.data || err);
     } finally {
       setLoading(false);
@@ -190,7 +233,7 @@ const BookAppointment = () => {
   return (
     <div className="flex h-screen bg-gray-100">
       <PatientSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-
+      
       <div className={`flex-1 ${isSidebarOpen ? 'ml-64' : 'ml-20'} transition-all duration-300`}>
         <header className="bg-white shadow-sm">
           <div className="flex items-center justify-between px-6 py-4">
@@ -241,16 +284,19 @@ const BookAppointment = () => {
                   name="start_time"
                   value={formData.start_time}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-4 py-2 border ${!formData.start_time ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                   required
                 >
                   <option value="">Select a time slot</option>
                   {availableSlots.map((slot, index) => (
-                    <option key={index} value={slot.start_time}>
+                    <option key={index} value={slot.start_time} data-availability-id={slot.id}>
                       {formatTimeString(slot.start_time)} - {formatTimeString(slot.end_time)} ({slot.doctor_name})
                     </option>
                   ))}
                 </select>
+                {!formData.start_time && (
+                  <p className="mt-1 text-sm text-red-600">Please select a time slot</p>
+                )}
               </div>
 
                 <div>
@@ -284,6 +330,39 @@ const BookAppointment = () => {
             </div>
           </div>
         </div>
+      
+    
+        {/* Success Popup */}
+        {showSuccessPopup && (
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black opacity-50"></div>
+            <div className="bg-white rounded-lg p-8 max-w-sm w-full mx-4 relative z-50">
+              <div className="text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                  <svg
+                    className="h-6 w-6 text-green-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Appointment Booked Successfully!
+                </h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Redirecting to your appointments...
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     
   );
