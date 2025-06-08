@@ -1,66 +1,59 @@
-# Use the official PHP image with FPM for Laravel
-FROM php:8.2-fpm
+FROM php:8.1-fpm
 
-# Install system dependencies and PHP extensions required by Laravel
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libzip-dev \
-    unzip \
     git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
     nginx \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_mysql zip
+    supervisor \
+    cron
+
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+
+# Install Redis extension (optional)
+RUN pecl install redis && docker-php-ext-enable redis
 
 # Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy Laravel app only from the backend folder
-COPY backend/ ./
+# Copy application files
+COPY . .
 
 # Install Laravel dependencies
 RUN composer install --optimize-autoloader --no-dev
 
-# Set permissions for Laravel
+# Copy Nginx configuration
+COPY ./docker/nginx.conf /etc/nginx/sites-available/default
+
+# Copy Supervisor configuration
+COPY ./docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy cron configuration for scheduler
+COPY ./docker/laravel-cron /etc/cron.d/laravel-cron
+
+# Set permissions
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache \
+    && chmod 0644 /etc/cron.d/laravel-cron
 
-# Configure Nginx directly
-RUN echo 'server { \
-    listen 80; \
-    server_name _; \
-    root /var/www/html/public; \
-    index index.php index.html; \
-    error_log /dev/stdout info; \
-    access_log /dev/stdout; \
-    location ~* \.(env|git) { deny all; return 403; } \
-    location / { try_files $uri $uri/ /index.php?$query_string; } \
-    location ~ \.php$ { \
-        fastcgi_pass 127.0.0.1:9000; \
-        fastcgi_index index.php; \
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \
-        include fastcgi_params; \
-    } \
-    location ~* \.(jpg|jpeg|gif|png|css|js|ico|webp|svg)$ { \
-        expires 5d; \
-    } \
-}' > /etc/nginx/sites-available/default
-
-# Create startup script
-RUN echo '#!/bin/bash \n\
-php-fpm -D \n\
-nginx -g "daemon off;" & \n\
-php artisan config:cache \n\
-php artisan queue:work --sleep=3 --tries=3 & \n\
-while true; do \n\
-    php artisan schedule:run >> /dev/stdout 2>&1 \n\
-    sleep 60 \n\
-done' > /start.sh \
-    && chmod +x /start.sh
-
+# Expose port 80
 EXPOSE 80
-CMD ["/start.sh"]
+
+# Start script
+COPY ./docker/start.sh /usr/local/bin/start
+RUN chmod +x /usr/local/bin/start
+
+CMD ["/usr/local/bin/start"]
