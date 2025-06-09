@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: medassist-laravel-api
+    env: docker
+    plan: free
+    branch: main
+    autoDeploy: true
+    buildCommand: ""
+    startCommand: "/start.sh"
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_DEBUG
+        value: false
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        value: sql.freedb.tech
+      - key: DB_PORT
+        value: 3306
+      - key: DB_DATABASE
+        value: freedb_MedAssist
+      - key: DB_USERNAME
+        value: freedb_Devuu
+      - key: DB_PASSWORD
+        value: mzGMy!FzFtneK#5
