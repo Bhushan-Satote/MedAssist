@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios'; // Add this import
+import axios from 'axios';
 import { API_BASE_URL } from '../../config/config';
-
-
 
 const ForgetPassword = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [emailSent, setEmailSent] = useState(false);
@@ -37,12 +35,12 @@ const ForgetPassword = () => {
 
   if (emailSent) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-8 px-2 sm:px-6 md:px-8 lg:px-0">
+        <div className="w-full max-w-md mx-auto">
+          <div className="bg-white py-8 px-4 sm:px-8 shadow sm:rounded-lg">
             <div className="text-center text-green-600">
-              <h2 className="text-2xl font-bold mb-2">Check Your Email</h2>
-              <p>We've sent password reset instructions to your email address.</p>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2">Check Your Email</h2>
+              <p className="text-base sm:text-lg">We've sent password reset instructions to your email address.</p>
             </div>
             <div className="mt-6 text-center">
               <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
@@ -56,18 +54,18 @@ const ForgetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="text-center text-3xl font-extrabold text-gray-900">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-8 px-2 sm:px-6 md:px-8 lg:px-0">
+      <div className="w-full max-w-md mx-auto">
+        <h2 className="text-center text-2xl sm:text-3xl font-extrabold text-gray-900">
           Forgot Password
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-2 text-center text-sm sm:text-base text-gray-600">
           Enter your email address and we'll send you instructions to reset your password.
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+      <div className="mt-8 w-full max-w-md mx-auto">
+        <div className="bg-white py-8 px-4 sm:px-8 shadow sm:rounded-lg">
           {error && (
             <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4">
               <p className="text-red-700">{error}</p>
@@ -86,7 +84,7 @@ const ForgetPassword = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({ email: e.target.value })}
                   required
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                   placeholder="Enter your email"
                 />
               </div>
@@ -96,7 +94,7 @@ const ForgetPassword = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm sm:text-base font-medium text-white ${
                   loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
                 } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
               >

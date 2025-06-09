@@ -52,14 +52,14 @@ const AboutUs = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
       <Navbar />
-      
-      {/* Enhanced Hero Section */}
+
+      {/* Hero Section */}
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative h-screen flex items-center justify-center overflow-hidden"
+        className="relative h-[60vh] md:h-screen flex items-center justify-center overflow-hidden"
       >
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-400 opacity-90"></div>
@@ -81,7 +81,7 @@ const AboutUs = () => {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-6xl md:text-7xl font-bold text-white mb-6"
+            className="text-4xl md:text-6xl font-bold text-white mb-6"
           >
             MedAssist
           </motion.h1>
@@ -89,15 +89,15 @@ const AboutUs = () => {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto"
+            className="text-lg md:text-2xl text-white/90 max-w-3xl mx-auto"
           >
             Transforming Healthcare Through Innovation
           </motion.p>
         </div>
       </motion.div>
 
-      {/* Enhanced Mission Section */}
-      <div className="relative py-24 bg-gradient-to-b from-white to-blue-50">
+      {/* Mission Section */}
+      <div className="relative py-16 md:py-24 bg-gradient-to-b from-white to-blue-50">
         <div className="container mx-auto px-4">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -105,9 +105,9 @@ const AboutUs = () => {
             viewport={{ once: true }}
             className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden"
           >
-            <div className="p-8 md:p-12">
-              <h2 className="text-4xl font-bold text-gray-800 mb-6">Our Mission</h2>
-              <p className="text-lg text-gray-600 leading-relaxed">
+            <div className="p-6 md:p-12">
+              <h2 className="text-2xl md:text-4xl font-bold text-gray-800 mb-6">Our Mission</h2>
+              <p className="text-base md:text-lg text-gray-600 leading-relaxed">
                 At MedAssist, we envision a future where healthcare is accessible, efficient, and personalized. 
                 Our mission is to bridge the gap between healthcare providers and patients through innovative technology.
               </p>
@@ -116,14 +116,14 @@ const AboutUs = () => {
         </div>
       </div>
 
-      {/* Enhanced Features Section */}
-      <div className="py-24 bg-gradient-to-b from-blue-50 to-white">
+      {/* Features Section */}
+      <div className="py-16 md:py-24 bg-gradient-to-b from-blue-50 to-white">
         <div className="container mx-auto px-4">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl font-bold text-center mb-16"
+            className="text-2xl md:text-4xl font-bold text-center mb-12 md:mb-16"
           >
             Why Choose MedAssist?
           </motion.h2>
@@ -136,10 +136,10 @@ const AboutUs = () => {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.2 }}
                 whileHover={{ y: -10 }}
-                className="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
+                className="bg-white p-6 md:p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
               >
                 <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-semibold mb-4">{feature.title}</h3>
+                <h3 className="text-lg md:text-xl font-semibold mb-4">{feature.title}</h3>
                 <p className="text-gray-600">{feature.description}</p>
               </motion.div>
             ))}
@@ -147,14 +147,14 @@ const AboutUs = () => {
         </div>
       </div>
 
-      {/* Enhanced Team Section */}
-      <div className="py-24 bg-gradient-to-b from-white to-blue-50">
+      {/* Team Section */}
+      <div className="py-16 md:py-24 bg-gradient-to-b from-white to-blue-50">
         <div className="container mx-auto px-4">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl font-bold text-center mb-16"
+            className="text-2xl md:text-4xl font-bold text-center mb-12 md:mb-16"
           >
             Meet Our Team
           </motion.h2>
@@ -176,8 +176,8 @@ const AboutUs = () => {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-2">{member.name}</h3>
+                <div className="p-4 md:p-6">
+                  <h3 className="text-lg md:text-xl font-semibold mb-2">{member.name}</h3>
                   <p className="text-blue-600 mb-2">{member.role}</p>
                   <p className="text-gray-600">{member.description}</p>
                 </div>
@@ -187,24 +187,24 @@ const AboutUs = () => {
         </div>
       </div>
 
-      {/* Enhanced Contact Section */}
+      {/* Contact Section */}
       <motion.div 
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
-        className="relative py-24 bg-gradient-to-r from-blue-600 to-blue-400"
+        className="relative py-16 md:py-24 bg-gradient-to-r from-blue-600 to-blue-400"
       >
         <div className="absolute inset-0 bg-grid-white/10"></div>
         <div className="container mx-auto px-4 relative">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-4xl font-bold text-white mb-8">Ready to Transform Healthcare?</h2>
-            <p className="text-xl text-white/90 mb-12">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-6 md:mb-8">Ready to Transform Healthcare?</h2>
+            <p className="text-lg md:text-xl text-white/90 mb-8 md:mb-12">
               Join our growing community of healthcare professionals and experience the future of medical practice management.
             </p>
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-white text-blue-600 font-semibold py-4 px-10 rounded-full text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-white text-blue-600 font-semibold py-3 md:py-4 px-8 md:px-10 rounded-full text-base md:text-lg shadow-lg hover:shadow-xl transition-all duration-300"
             >
               Get Started Today
             </motion.button>
@@ -213,7 +213,7 @@ const AboutUs = () => {
       </motion.div>
 
       {/* Statistics Section */}
-      <div className="bg-white py-20">
+      <div className="bg-white py-12 md:py-20">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8" data-aos="fade-up">
             <div className="text-center">
@@ -221,13 +221,13 @@ const AboutUs = () => {
                 initial={{ opacity: 0, scale: 0.5 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="text-4xl font-bold text-blue-600 mb-2"
+                className="text-2xl md:text-4xl font-bold text-blue-600 mb-2"
               >
                 1000+
               </motion.div>
-              <p className="text-gray-600">Doctors Registered</p>
+              <p className="text-gray-600 text-sm md:text-base">Doctors Registered</p>
             </div>
-            {/* Add more statistics */}
+            {/* Add more statistics as needed */}
           </div>
         </div>
       </div>

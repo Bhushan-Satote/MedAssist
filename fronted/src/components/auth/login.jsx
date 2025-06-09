@@ -4,8 +4,6 @@ import axios from 'axios';
 import Navbar from '../Navbar';
 import { API_BASE_URL } from '../../config/config';
 
-
-
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -22,7 +20,6 @@ const Login = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
-    // Clear any previous errors when user starts typing
     setError('');
   };
 
@@ -31,7 +28,6 @@ const Login = () => {
     setIsLoading(true);
     setError('');
 
-    // Validate required fields
     if (!formData.email || !formData.password || !formData.role) {
       setError('Please fill in all required fields');
       setIsLoading(false);
@@ -39,7 +35,6 @@ const Login = () => {
     }
 
     try {
-      // Step 1: Attempt login
       const loginResponse = await axios.post(`${API_BASE_URL}/login`, 
         {
           email: formData.email,
@@ -57,19 +52,16 @@ const Login = () => {
       if (loginResponse.data.status === 'success') {
         const { token, user } = loginResponse.data.data;
 
-        // Step 2: Role Validation
         if (user.role !== formData.role) {
           setError(`Access denied. You are registered as a ${user.role}`);
           setIsLoading(false);
           return;
         }
 
-        // Step 3: Store Authentication Data
         localStorage.setItem('auth_token', token);
         localStorage.setItem('user_role', user.role);
         localStorage.setItem('user_data', JSON.stringify(user));
 
-        // Step 4: Fetch Role-Specific Profile
         try {
           let profileEndpoint = '';
           switch (user.role) {
@@ -79,9 +71,6 @@ const Login = () => {
             case 'patient':
               profileEndpoint = `${API_BASE_URL}/patients/profile`;
               break;
-            // case 'admin':
-            //   profileEndpoint = `${API_BASE_URL}/admin/profile`;
-            //   break;
             default:
               throw new Error('Invalid role');
           }
@@ -95,10 +84,8 @@ const Login = () => {
           });
 
           if (profileResponse.data.status === 'success') {
-            // Store role-specific profile data
             localStorage.setItem(`${user.role}_data`, JSON.stringify(profileResponse.data.data));
 
-            // Step 5: Role-Based Navigation
             switch (user.role) {
               case 'doctor':
                 navigate('/doctor/dashboard', { replace: true });
@@ -126,7 +113,7 @@ const Login = () => {
   };
 
   const handleAuthError = (error) => {
-    localStorage.clear(); // Clear any partial authentication data
+    localStorage.clear();
 
     if (error.response) {
       switch (error.response.status) {
@@ -156,24 +143,23 @@ const Login = () => {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 mt-16">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="text-center text-3xl font-bold text-gray-900 mb-2">MedAssist</h2>
-          <h3 className="text-center text-xl text-gray-600">Sign in to your account</h3>
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-8 px-2 sm:px-6 md:px-8 lg:px-12 xl:px-0 mt-16">
+        <div className="w-full max-w-md mx-auto">
+          <h2 className="text-center text-2xl sm:text-3xl font-bold text-gray-900 mb-2">MedAssist</h2>
+          <h3 className="text-center text-lg sm:text-xl text-gray-600">Sign in to your account</h3>
         </div>
 
-        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10">
-            {/* Show error message if exists */}
+        <div className="mt-6 sm:mt-8 w-full max-w-md mx-auto">
+          <div className="bg-white py-6 px-3 sm:px-6 md:px-8 shadow-lg rounded-lg">
             {error && (
               <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
                 <span className="block sm:inline">{error}</span>
               </div>
             )}
 
-            <form className="space-y-8 w-full max-w-2xl mx-auto p-6" onSubmit={handleSubmit}>
+            <form className="space-y-6 w-full mx-auto" onSubmit={handleSubmit}>
               {/* Role Selection */}
-              <div className="mb-6">
+              <div>
                 <label htmlFor="role" className="block text-sm font-semibold text-gray-800 mb-2">
                   Select Role <span className="text-red-500">*</span>
                 </label>
@@ -182,7 +168,7 @@ const Login = () => {
                   name="role"
                   value={formData.role}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200 ease-in-out bg-white shadow-sm text-gray-700"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200 bg-white shadow-sm text-gray-700 text-base"
                   required
                 >
                   <option value="">Select your role</option>
@@ -192,7 +178,7 @@ const Login = () => {
               </div>
 
               {/* Email */}
-              <div className="mb-6">
+              <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-800 mb-2">
                   Email Address <span className="text-red-500">*</span>
                 </label>
@@ -204,13 +190,13 @@ const Login = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200 ease-in-out shadow-sm"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200 shadow-sm text-base"
                   placeholder="Enter your email"
                 />
               </div>
 
               {/* Password */}
-              <div className="mb-6">
+              <div>
                 <label htmlFor="password" className="block text-sm font-semibold text-gray-800 mb-2">
                   Password <span className="text-red-500">*</span>
                 </label>
@@ -222,13 +208,13 @@ const Login = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200 ease-in-out shadow-sm"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors duration-200 shadow-sm text-base"
                   placeholder="Enter your password"
                 />
               </div>
 
               {/* Remember Me and Forgot Password */}
-              <div className="flex items-center justify-between mb-6 py-2">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-2">
                 <div className="flex items-center">
                   <input
                     id="remember-me"
@@ -236,12 +222,12 @@ const Login = () => {
                     type="checkbox"
                     className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition duration-150 ease-in-out"
                   />
-                  <label htmlFor="remember-me" className="ml-3 block text-sm font-medium text-gray-700 hover:text-gray-900">
+                  <label htmlFor="remember-me" className="ml-2 block text-sm font-medium text-gray-700 hover:text-gray-900">
                     Remember me
                   </label>
                 </div>
 
-                <div className="text-sm">
+                <div className="text-sm mt-2 sm:mt-0">
                   <Link 
                     to="/forgotpassword" 
                     className="font-semibold text-blue-600 hover:text-blue-700 transition duration-150 ease-in-out"
@@ -252,11 +238,11 @@ const Login = () => {
               </div>
 
               {/* Submit Button */}
-              <div className="mt-8">
+              <div className="mt-4">
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full flex justify-center items-center px-6 py-3.5 border border-transparent rounded-lg text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out shadow-md ${
+                  className={`w-full flex justify-center items-center px-6 py-3 border border-transparent rounded-lg text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out shadow-md ${
                     isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg active:bg-blue-800'
                   }`}
                 >
